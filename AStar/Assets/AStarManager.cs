@@ -37,10 +37,16 @@ public class AStarManager : MonoBehaviour {
                 GameObject cell = Instantiate(cellPrefab, new Vector3(-6.15F + x, 4.5F - y, 0), Quaternion.identity);
 
                 if (x == startCellXPos && y == startCellYPos)
+                {
+                    cell.GetComponent<Cell>().startCell = true;
                     cell.GetComponent<SpriteRenderer>().color = Color.green;
+                }
 
                 if (x == endCellXPos && y == endCellYPos)
+                {
+                    cell.GetComponent<Cell>().endCell = true;
                     cell.GetComponent<SpriteRenderer>().color = Color.red;
+                }
             }
         }
     }
