@@ -67,8 +67,6 @@ public class AStarManager : MonoBehaviour {
                 cellManager.AddCell(cell, x, y);
             }
         }
-
-     
     }
 	
 	// Update is called once per frame

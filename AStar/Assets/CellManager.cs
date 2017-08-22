@@ -17,12 +17,17 @@ public class CellManager : MonoBehaviour {
     public Cell parentCell;
     // 목표 셀
     public Cell targetCell;
-    //
+
+    // 처음 시작인지
+    public bool start;
+
     public void Init(int cellXCount, int cellYCount)
     {
         cells = new Cell[cellXCount, cellYCount];
         openList = new List<Cell>();
         closeList = new List<Cell>();
+
+        start = false;
     }
 
     public void AddCell(Cell cell, int x, int y)
@@ -43,19 +48,28 @@ public class CellManager : MonoBehaviour {
         CalculateCellsHValue();
 
         // 시작 셀을 닫힌 목록에 추가
-        closeList.Add(parentCell);
+        AddCloseCell(parentCell);
+
+        CalculateShortestDistance();
+
+        start = true;
     }
    
     public bool CalculateShortestDistance()
     {
         Cell beforeCell = parentCell;
 
-        if (!(openList.Count == 0))
+        if (start)
         {
-            parentCell = GetShortestCellByFValue();
-            
-            // 닫힌 목록에 현재 부모를 넣는다.
-            AddCloseCell(parentCell);
+            if (openList.Count == 0)
+                Debug.Log("Can't Find");
+            else
+            {
+                parentCell = GetShortestCellByFValue();
+
+                // 닫힌 목록에 현재 부모를 넣는다.
+                AddCloseCell(parentCell);
+            }
         }
 
         for (int x = -1; x < 2; x++)
@@ -92,8 +106,6 @@ public class CellManager : MonoBehaviour {
                     {
                         // 새로운 부모를 할당한다.
                         cell.parentCell = parentCell;
-
-                        RefreshOpenNodeText();
                     }
                 }
                 else
@@ -104,7 +116,7 @@ public class CellManager : MonoBehaviour {
                 }
 
                 // G값 세팅
-                cell.SetCellGValue(x, y);
+                cell.SetCellGValue();
 
                 // F값 세팅
                 cell.SetCellFValue();
@@ -126,8 +138,6 @@ public class CellManager : MonoBehaviour {
         int yAbs = Mathf.Abs(currentCell.y - targetCell.y);
         if (xAbs == 1 && yAbs == 1)
             return 14;
-        //else if (xAbs == 0 && yAbs == 0)
-        //    return 0;
         else
             return 10;
     }
@@ -165,47 +175,6 @@ public class CellManager : MonoBehaviour {
 
             cell.h = (Mathf.Abs(cell.x - targetCell.x) + Mathf.Abs(cell.y - targetCell.y)) * 10;
         }
-    }
-
-    public void FindNextCenterCell(ref int centerCellXCount, ref int centerCellYCount)
-    {
-        if (openList.Count == 0)
-            return;
-
-        // Before CenterCell
-        Cell beforeCell = cells[centerCellXCount, centerCellYCount];
-
-        beforeCell.GetComponent<SpriteRenderer>().sprite = cellSprites[3];
-        openList.Remove(beforeCell);
-        closeList.Add(beforeCell);
-
-        Cell nextCenterCell = cells[centerCellXCount - 1, centerCellYCount - 1];
-        int centerX = 0;
-        int centerY = 0;
-
-        for (int x = -1; x < 2; x++)
-        {
-            for (int y = -1; y < 2; y++)
-            {
-                Cell cell = cells[centerCellXCount + x, centerCellYCount + y];
-
-                if (cell.startCell)
-                    continue;
-
-                if (nextCenterCell.f >= cell.f)
-                {
-                    centerX = centerCellXCount + x;
-                    centerY = centerCellYCount + y;
-
-                    nextCenterCell = cell;
-                }
-            }
-        }
-
-        centerCellXCount = centerX;
-        centerCellYCount = centerY;
-
-        nextCenterCell.GetComponent<SpriteRenderer>().sprite = cellSprites[2];
     }
 
     public void RefreshOpenNodeText()

@@ -69,9 +69,9 @@ public class Cell : MonoBehaviour {
     }
 
     // 셀의 G값을 찾는다.
-    public void SetCellGValue(int x, int y)
+    public void SetCellGValue()
     {
-        if (Mathf.Abs(x) == 1 && Mathf.Abs(y) == 1)
+        if (Mathf.Abs(parentCell.x - x) == 1 && Mathf.Abs(parentCell.y - y) == 1)
             g = 14;
         else
             g = 10;
