@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+enum eState { eWait, eSearching, eFinish, eNone }
+
 public class AStarManager : MonoBehaviour {
 
     // Cell Count
@@ -21,6 +23,9 @@ public class AStarManager : MonoBehaviour {
 
     // Cell Manager
     private CellManager cellManager;
+
+    // State
+    private eState state;
 
     // Use this for initialization
     void Start () {
@@ -63,15 +68,32 @@ public class AStarManager : MonoBehaviour {
             }
         }
 
-        cellManager.CalculateCellsHValue(endCellXPos, endCellYPos);
+     
     }
 	
 	// Update is called once per frame
 	void Update () {
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
-            cellManager.FindNextCenterCell(ref startCellXPos, ref startCellYPos);
-            cellManager.CalculateRoundCellsGValue(ref startCellXPos, ref startCellYPos);
+            switch (state)
+            {
+                case eState.eWait:
+                    cellManager.StartAStarPathfinding(startCellXPos, startCellYPos, endCellXPos, endCellYPos);
+                    state = eState.eSearching;
+
+                    break;
+
+                case eState.eSearching:
+                    if (cellManager.CalculateShortestDistance())
+                        state = eState.eFinish;
+
+                    break;
+                case eState.eFinish:
+                    cellManager.ShowAStarResult();
+                    state = eState.eNone;
+
+                    break;
+            }
         }
 	}
 }

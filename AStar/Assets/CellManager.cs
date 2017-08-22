@@ -8,22 +8,16 @@ public class CellManager : MonoBehaviour {
     public Sprite[] cellSprites;
     // 셀 목록
     private Cell[,] cells;
-    // 열린 목록(최단거리일 가능성이 있는 셀들의 목록
+    // 열린 목록(최단거리일 가능성이 있는 셀들의 목록)
     public List<Cell> openList;
     // 닫힌 목록(최단거리가 아닌 셀들의 목록)
     public List<Cell> closeList;
 
-    // Use this for initialization
-    void Start () {
-
-
-    }
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
-
+    // 부모 셀
+    public Cell parentCell;
+    // 목표 셀
+    public Cell targetCell;
+    //
     public void Init(int cellXCount, int cellYCount)
     {
         cells = new Cell[cellXCount, cellYCount];
@@ -36,7 +30,129 @@ public class CellManager : MonoBehaviour {
         cells[x, y] = cell;
     }
 
-    public void CalculateCellsHValue(int endCellX, int endCellY)
+    private void AddCloseCell(Cell cell)
+    {
+        closeList.Add(cell);
+    }
+
+    public void StartAStarPathfinding(int startCellXPos, int startCellYPos, int endCellXPos, int endCellYPos)
+    {
+        parentCell = cells[startCellXPos, startCellYPos];
+        targetCell = cells[endCellXPos, endCellYPos];
+
+        CalculateCellsHValue();
+
+        // 시작 셀을 닫힌 목록에 추가
+        closeList.Add(parentCell);
+    }
+   
+    public bool CalculateShortestDistance()
+    {
+        Cell beforeCell = parentCell;
+
+        if (!(openList.Count == 0))
+        {
+            parentCell = GetShortestCellByFValue();
+            
+            // 닫힌 목록에 현재 부모를 넣는다.
+            AddCloseCell(parentCell);
+        }
+
+        for (int x = -1; x < 2; x++)
+        {
+            for (int y = -1; y < 2; y++)
+            {
+                if (parentCell.x + x < 0 || parentCell.y + y < 0)
+                    continue;
+
+                Cell cell = cells[parentCell.x + x, parentCell.y + y];
+
+                if (cell.endCell)
+                {
+                    cell.parentCell = parentCell;
+
+                    return true;
+                }
+
+                if (cell.blockCell)
+                    continue;
+
+                if (closeList.Exists(e => e == cell))
+                    continue;
+
+                // 부모 셀 주위 검색된 셀들을 오픈 리스트에 추가,
+                // 이미 열린 목록에 존재한다면, 예비 부모 셀 -> 셀, 현재 부모 -> 셀 의 G값을 비교해서 최단거리 여부를 판단한다.
+                if (openList.Find(e => e == cell))
+                {
+                    int beforeDistance = GetDistance(beforeCell, cell);
+                    int currentDistance = parentCell.g + GetDistance(parentCell, cell);
+
+                    // 이전 부모를 거쳐서 현재 부모로 가는 이동거리가 이전보다 길 경우
+                    if (beforeDistance < currentDistance)
+                    {
+                        // 새로운 부모를 할당한다.
+                        cell.parentCell = parentCell;
+
+                        RefreshOpenNodeText();
+                    }
+                }
+                else
+                {
+                    openList.Add(cell);
+
+                    cell.parentCell = parentCell;
+                }
+
+                // G값 세팅
+                cell.SetCellGValue(x, y);
+
+                // F값 세팅
+                cell.SetCellFValue();
+
+                cell.GetComponent<SpriteRenderer>().sprite = cellSprites[1];
+            }
+        }
+
+        RefreshOpenNodeText();
+
+        parentCell.GetComponent<SpriteRenderer>().sprite = cellSprites[2];
+
+        return false;
+    }
+
+    private int GetDistance(Cell currentCell, Cell targetCell)
+    {
+        int xAbs = Mathf.Abs(currentCell.x - targetCell.x);
+        int yAbs = Mathf.Abs(currentCell.y - targetCell.y);
+        if (xAbs == 1 && yAbs == 1)
+            return 14;
+        //else if (xAbs == 0 && yAbs == 0)
+        //    return 0;
+        else
+            return 10;
+    }
+
+    private Cell GetShortestCellByFValue()
+    {
+        Cell shortestCell = openList[0];
+
+        foreach (Cell cell in openList)
+        {
+            if (cell.blockCell || closeList.Exists(e => e == cell))
+                continue;
+
+            if (cell.f <= shortestCell.f)
+            {
+                shortestCell = cell;
+            }
+        }
+
+        shortestCell.GetComponent<SpriteRenderer>().sprite = cellSprites[2];
+
+        return shortestCell;
+    }
+
+    public void CalculateCellsHValue()
     {
         foreach (Cell cell in cells)
         {
@@ -47,7 +163,7 @@ public class CellManager : MonoBehaviour {
                 continue;
             }
 
-            cell.h = (Mathf.Abs(cell.x - endCellX) + Mathf.Abs(cell.y - endCellY)) * 10;
+            cell.h = (Mathf.Abs(cell.x - targetCell.x) + Mathf.Abs(cell.y - targetCell.y)) * 10;
         }
     }
 
@@ -92,66 +208,6 @@ public class CellManager : MonoBehaviour {
         nextCenterCell.GetComponent<SpriteRenderer>().sprite = cellSprites[2];
     }
 
-    public void CalculateRoundCellsGValue(ref int centerCellXCount, ref int centerCellYCount)
-    {
-        for (int x = -1; x < 2; x++)
-        {
-            for (int y = -1; y < 2; y++)
-            {
-                Cell cell = cells[centerCellXCount + x, centerCellYCount + y];
-
-                if (cell.blockCell)
-                    continue;
-
-                if (closeList.Exists(e => e == cell))
-                    continue;
-
-                if (cell.x == centerCellXCount && cell.y == centerCellYCount)
-                {
-                    if (!(closeList.Exists(e => e == cell)))
-                        closeList.Add(cell);
-
-                    continue;
-                }
-
-                if (Mathf.Abs(x) == 1 && Mathf.Abs(y) == 1)
-                    cell.g = 14;
-                else
-                    cell.g = 10;
-
-                //if (openList.Exists(e => e == cell))
-                //{
-                //    if (cell.g < cells[centerCellXCount, centerCellYCount].g + cell.g)
-                //    {
-                //        // 부모 셀이 바뀌고, 더 나은 주위 열린 노드에 더 나은 G 값이 있다면 옮김(대각선 값)
-                //        Cell beforeCenterCell = cells[centerCellXCount, centerCellYCount];
-
-                //        beforeCenterCell.GetComponent<SpriteRenderer>().sprite = cellSprites[3];
-                //        openList.Remove(beforeCenterCell);
-                //        closeList.Add(beforeCenterCell);
-
-                //        centerCellXCount = centerCellXCount + x;
-                //        centerCellYCount = centerCellYCount + y;
-
-                //        cell.GetComponent<SpriteRenderer>().sprite = cellSprites[2];
-
-                //        return;
-                //    }
-                //}
-                //else
-                    openList.Add(cell);
-
-                cell.GetComponent<SpriteRenderer>().sprite = cellSprites[1];
-
-                CalculateCellFValue(cell);
-            }
-        }
-
-        RefreshOpenNodeText();
-        //RefreshCloseNodeText();
-        Debug.Log("GValue");
-    }
-
     public void RefreshOpenNodeText()
     {
         foreach (Cell cell in openList)
@@ -168,9 +224,17 @@ public class CellManager : MonoBehaviour {
         }
     }
 
-    public void CalculateCellFValue(Cell cell)
+    public void ShowAStarResult()
     {
-        cell.f = cell.g + cell.h;
-    }
+        Cell cell = targetCell;
 
+        while (true)
+        {
+            cell = cell.parentCell;
+            cell.GetComponent<SpriteRenderer>().sprite = cellSprites[3];
+
+            if (cell.parentCell == null)
+                break;
+        }
+    }
 }
