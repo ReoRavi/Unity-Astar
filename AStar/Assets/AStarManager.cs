@@ -29,8 +29,10 @@ public class AStarManager : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        xCellCount = 14;
-        yCellCount = 10;
+        Vector3 screenSize = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, 0));
+
+        xCellCount = (int)(screenSize.x * 2 / cellPrefab.transform.localScale.x);
+        yCellCount = (int)(screenSize.y * 2 / cellPrefab.transform.localScale.y);
         
         startCellXPos = 3;
         startCellYPos = 3;
@@ -45,7 +47,10 @@ public class AStarManager : MonoBehaviour {
         {
             for (int y = 0; y < yCellCount; y++)
             {
-                GameObject cellObject = Instantiate(cellPrefab, new Vector3(-6.15F + x, 4.5F - y, 0), Quaternion.identity);
+                GameObject cellObject = Instantiate(cellPrefab, new Vector3(
+                    -screenSize.x + (x * cellPrefab.transform.localScale.x) + (cellPrefab.transform.localScale.x / 2), 
+                    screenSize.y - (y * cellPrefab.transform.localScale.y) - (cellPrefab.transform.localScale.y / 2), 0), 
+                    Quaternion.identity);
 
                 Cell cell = cellObject.GetComponent<Cell>();
 
@@ -64,7 +69,7 @@ public class AStarManager : MonoBehaviour {
                 cell.x = x;
                 cell.y = y;
 
-                cellManager.AddCell(cell, x, y);
+                cellManager.cells[x, y] = cell;
             }
         }
     }

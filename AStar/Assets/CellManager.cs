@@ -7,7 +7,7 @@ public class CellManager : MonoBehaviour {
     // 셀 상태에 따라 바뀔 스프라이트
     public Sprite[] cellSprites;
     // 셀 목록
-    private Cell[,] cells;
+    public Cell[,] cells;
     // 열린 목록(최단거리일 가능성이 있는 셀들의 목록)
     public List<Cell> openList;
     // 닫힌 목록(최단거리가 아닌 셀들의 목록)
@@ -28,11 +28,6 @@ public class CellManager : MonoBehaviour {
         closeList = new List<Cell>();
 
         start = false;
-    }
-
-    public void AddCell(Cell cell, int x, int y)
-    {
-        cells[x, y] = cell;
     }
 
     private void AddCloseCell(Cell cell)

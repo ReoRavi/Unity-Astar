@@ -4,8 +4,11 @@ using UnityEngine;
 
 public class Cell : MonoBehaviour {
 
+    // Is StartCell
     public bool startCell;
+    // Is EndCell
     public bool endCell;
+    // Is BlockCell
     public bool blockCell;
 
     // Cell Position
@@ -14,20 +17,20 @@ public class Cell : MonoBehaviour {
 
     // G + H 
     public int f;
-    // 현재 위치에서 이동 값(가로, 세로 = 10, 대각선 = 14)
+    // Move Price To Parent
     public int g;
-    // 벽을 계산하지 않고 목적지에 도착하는 비용
+    // Direct Price To EndCell 
     public int h;
 
-    // 셀의 부모 (셀의 시작점)
+    // Parent Cell
     public Cell parentCell;
 
-    // Cell Text
+    // Cell Text Prefab
     public GameObject cellText;
 
-    // 셀 텍스트 객체
+    // Text Obejct
     private CellText cellTextObject;
-    // 부모 캔버스
+    // Text Canvas
     GameObject cellTextParentObject;
 
     // Use this for initialization
@@ -68,7 +71,7 @@ public class Cell : MonoBehaviour {
         }
     }
 
-    // 셀의 G값을 찾는다.
+    // Calculate G Value
     public void SetCellGValue()
     {
         if (Mathf.Abs(parentCell.x - x) == 1 && Mathf.Abs(parentCell.y - y) == 1)
@@ -78,12 +81,13 @@ public class Cell : MonoBehaviour {
 
     }
 
-    // 셀의 F값을 찾는다.
+    // Calculate F Value
     public void SetCellFValue()
     {
         f = g + h;
     }
 
+    // Refresh Text
     public void RefreshText()
     {
         if (cellTextObject == null)
@@ -93,6 +97,7 @@ public class Cell : MonoBehaviour {
         cellTextObject.transform.position = transform.position;
     }
 
+    // Delete Text
     public void DeleteText()
     {
         if (cellTextObject == null)
