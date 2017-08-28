@@ -24,7 +24,7 @@ GameObject:
   - component: {fileID: 114485995535663842}
   - component: {fileID: 132651396509167004}
   m_Layer: 0
-  m_Name: Cell
+  m_Name: Node
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -79,9 +79,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb48f66411fb06542bb90e381a70b798, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startCell: 0
-  endCell: 0
-  blockCell: 0
+  parentCell: {fileID: 0}
+  state: 0
   x: 0
   y: 0
   f: 0

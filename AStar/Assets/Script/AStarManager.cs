@@ -2,38 +2,40 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-enum eState { eWait, eSearching, eFinish, eNone }
+enum eAStarState { eWait, eSearching, eFinish, eNone }
 
-public class AStarManager : MonoBehaviour {
-
-    // Cell Count
-    public int xCellCount;
-    public int yCellCount;
-
+public class AStarManager : MonoBehaviour
+{
+    #region Variable
     // Start Cell(Green) Position
-    public int startCellXPos;
-    public int startCellYPos;
+    [Header("Start Cell Position")]
+    [SerializeField]
+    private int startCellXPos, startCellYPos;
 
     // End Cell(Red) Position
-    public int endCellXPos;
-    public int endCellYPos;
+    [Header("End Cell Position")]
+    [SerializeField]
+    private int endCellXPos, endCellYPos;
 
+    [Header("Cell Prefab Object")]
+    [SerializeField]
     // Cell Object
-    public GameObject cellPrefab;
+    private GameObject cellPrefab;
 
     // Cell Manager
     private CellManager cellManager;
-
     // State
-    private eState state;
+    private eAStarState state;
+    #endregion
 
     // Use this for initialization
-    void Start () {
+    void Start()
+    {
         Vector3 screenSize = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, 0));
 
-        xCellCount = (int)(screenSize.x * 2 / cellPrefab.transform.localScale.x);
-        yCellCount = (int)(screenSize.y * 2 / cellPrefab.transform.localScale.y);
-        
+        int xCellCount = (int)(screenSize.x * 2 / cellPrefab.transform.localScale.x);
+        int yCellCount = (int)(screenSize.y * 2 / cellPrefab.transform.localScale.y);
+
         startCellXPos = 3;
         startCellYPos = 3;
 
@@ -48,55 +50,54 @@ public class AStarManager : MonoBehaviour {
             for (int y = 0; y < yCellCount; y++)
             {
                 GameObject cellObject = Instantiate(cellPrefab, new Vector3(
-                    -screenSize.x + (x * cellPrefab.transform.localScale.x) + (cellPrefab.transform.localScale.x / 2), 
-                    screenSize.y - (y * cellPrefab.transform.localScale.y) - (cellPrefab.transform.localScale.y / 2), 0), 
+                    -screenSize.x + (x * cellPrefab.transform.localScale.x) + (cellPrefab.transform.localScale.x / 2),
+                    screenSize.y - (y * cellPrefab.transform.localScale.y) - (cellPrefab.transform.localScale.y / 2), 0),
                     Quaternion.identity);
 
                 Cell cell = cellObject.GetComponent<Cell>();
 
                 if (x == startCellXPos && y == startCellYPos)
                 {
-                    cell.startCell = true;
+                    cell.SetCellState(eCellState.eStart);
                     cellObject.GetComponent<SpriteRenderer>().color = Color.green;
                 }
 
                 if (x == endCellXPos && y == endCellYPos)
                 {
-                    cell.endCell = true;
+                    cell.SetCellState(eCellState.eEnd);
                     cellObject.GetComponent<SpriteRenderer>().color = Color.red;
                 }
 
-                cell.x = x;
-                cell.y = y;
-
-                cellManager.cells[x, y] = cell;
+                cell.SetCellPosition(x, y);
+                cellManager.SetCell(cell, x, y);
             }
         }
     }
-	
-	// Update is called once per frame
-	void Update () {
+
+    // Update is called once per frame
+    void Update()
+    {
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             switch (state)
             {
-                case eState.eWait:
+                case eAStarState.eWait:
                     cellManager.StartAStarPathfinding(startCellXPos, startCellYPos, endCellXPos, endCellYPos);
-                    state = eState.eSearching;
+                    state = eAStarState.eSearching;
 
                     break;
 
-                case eState.eSearching:
-                    if (cellManager.CalculateShortestDistance())
-                        state = eState.eFinish;
+                case eAStarState.eSearching:
+                    if (cellManager.AStarPathFinding())
+                        state = eAStarState.eFinish;
 
                     break;
-                case eState.eFinish:
+                case eAStarState.eFinish:
                     cellManager.ShowAStarResult();
-                    state = eState.eNone;
+                    state = eAStarState.eNone;
 
                     break;
             }
         }
-	}
+    }
 }
