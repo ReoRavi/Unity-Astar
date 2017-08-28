@@ -1,6 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
+using System.Linq;
+using System.Text;
 
 public class CellManager : MonoBehaviour {
 
@@ -71,9 +74,13 @@ public class CellManager : MonoBehaviour {
         {
             for (int y = -1; y < 2; y++)
             {
-                if (parentCell.x + x < 0 || parentCell.y + y < 0)
+                if (parentCell.x + x < 0 || parentCell.y + y < 0 ||
+                    parentCell.x + x > AStarManager.Instance.xCellCount - 1 || 
+                    parentCell.y + y > AStarManager.Instance.yCellCount - 1)
                     continue;
 
+                if (parentCell == null || cells[parentCell.x + x, parentCell.y + y] == null)
+                    Debug.Log("s");
                 Cell cell = cells[parentCell.x + x, parentCell.y + y];
 
                 if (cell.endCell)
@@ -115,14 +122,10 @@ public class CellManager : MonoBehaviour {
 
                 // F값 세팅
                 cell.SetCellFValue();
-
-                cell.GetComponent<SpriteRenderer>().sprite = cellSprites[1];
             }
         }
 
-        RefreshOpenNodeText();
-
-        parentCell.GetComponent<SpriteRenderer>().sprite = cellSprites[2];
+        //RefreshOpenNodeText();
 
         return false;
     }
@@ -152,8 +155,6 @@ public class CellManager : MonoBehaviour {
             }
         }
 
-        shortestCell.GetComponent<SpriteRenderer>().sprite = cellSprites[2];
-
         return shortestCell;
     }
 
@@ -172,21 +173,21 @@ public class CellManager : MonoBehaviour {
         }
     }
 
-    public void RefreshOpenNodeText()
-    {
-        foreach (Cell cell in openList)
-        {
-            cell.RefreshText();
-        }
-    }
+    //public void RefreshOpenNodeText()
+    //{
+    //    foreach (Cell cell in openList)
+    //    {
+    //        cell.RefreshText();
+    //    }
+    //}
 
-    public void RefreshCloseNodeText()
-    {
-        foreach (Cell cell in closeList)
-        {
-            cell.DeleteText();
-        }
-    }
+    //public void RefreshCloseNodeText()
+    //{
+    //    foreach (Cell cell in closeList)
+    //    {
+    //        cell.DeleteText();
+    //    }
+    //}
 
     public void ShowAStarResult()
     {
@@ -195,10 +196,68 @@ public class CellManager : MonoBehaviour {
         while (true)
         {
             cell = cell.parentCell;
-            cell.GetComponent<SpriteRenderer>().sprite = cellSprites[3];
 
             if (cell.parentCell == null)
                 break;
         }
     }
+
+    #region Zergling
+
+    public List<Cell> GetAStarPath(Cell currentCell, Cell targetCell)
+    {
+        foreach (Cell fCell in cells)
+        {
+            fCell.parentCell = null;
+        }
+
+        start = false;
+
+        openList.Clear();
+        closeList.Clear();
+
+        parentCell = currentCell;
+        this.targetCell = targetCell;
+
+        CalculateCellsHValue();
+
+        AddCloseCell(parentCell);
+
+        while (true)
+        {
+            if (CalculateShortestDistance())
+                break;
+
+            if (!start)
+                start = true;
+        }
+
+        List<Cell> path = new List<Cell>();
+
+        Cell cell = targetCell;
+
+        path.Add(cell);
+
+        while (true)
+        {
+            if (cell.parentCell == null)
+                break;
+
+            cell = cell.parentCell;
+
+            path.Add(cell);
+        }
+
+        foreach (Cell fCell in cells)
+        {
+            fCell.RefreshCell();
+        }
+
+
+        return path;
+    }
+
+
+
+    #endregion
 }

@@ -25,13 +25,14 @@ public class Cell : MonoBehaviour {
     // Parent Cell
     public Cell parentCell;
 
+#if TEXT
     // Cell Text Prefab
     public GameObject cellText;
-
-    // Text Obejct
+    // Text Object
     private CellText cellTextObject;
     // Text Canvas
     GameObject cellTextParentObject;
+#endif
 
     // Use this for initialization
     void Awake () {
@@ -43,16 +44,43 @@ public class Cell : MonoBehaviour {
         g = 0;
         h = 0;
 
+        x = 0;
+        y = 0;
+
         parentCell = null;
 
+
+#if TEXT
         cellTextParentObject = Instantiate(cellText, transform.position, Quaternion.identity);
         cellTextParentObject.GetComponent<Canvas>().worldCamera = Camera.main;
+#endif
     }
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+
+    public void RefreshCell()
+    {
+        f = 0;
+        g = 0;
+        h = 0;
+
+        startCell = false;
+        //endCell = false;
+    }
+
+    // Update is called once per frame
+    void Update () {
+
+        if (Input.GetMouseButtonDown(1))
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit2D hit = Physics2D.GetRayIntersection(ray, Mathf.Infinity);
+
+            if (hit.collider != null && hit.collider.transform == transform)
+            {
+                endCell = true;
+                AStarManager.Instance.ZerglingMove(this, Camera.main.ScreenToWorldPoint(Input.mousePosition));
+            }
+        }
+    }
 
     private void OnMouseDown()
     {
@@ -61,12 +89,10 @@ public class Cell : MonoBehaviour {
 
         if (blockCell)
         {
-            GetComponent<SpriteRenderer>().color = Color.white;
             blockCell = false;
         }
         else
         {
-            GetComponent<SpriteRenderer>().color = Color.blue;
             blockCell = true;
         }
     }
@@ -86,23 +112,26 @@ public class Cell : MonoBehaviour {
     {
         f = g + h;
     }
-
+#if TEXT
     // Refresh Text
     public void RefreshText()
     {
+
         if (cellTextObject == null)
             cellTextObject = cellTextParentObject.transform.GetChild(0).GetComponent<CellText>();
 
         cellTextObject.GetComponent<CellText>().SetText(g, f, h);
         cellTextObject.transform.position = transform.position;
-    }
 
-    // Delete Text
-    public void DeleteText()
+}
+
+// Delete Text
+public void DeleteText()
     {
         if (cellTextObject == null)
             cellTextObject = cellTextParentObject.transform.GetChild(0).GetComponent<CellText>();
 
         cellTextObject.GetComponent<CellText>().DeleteText();
     }
+#endif
 }

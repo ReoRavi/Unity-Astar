@@ -27,6 +27,11 @@ public class AStarManager : MonoBehaviour {
     // State
     private eState state;
 
+    // zergling
+    public GameObject zergling;
+    // zergling Prefab
+    public List<GameObject> zerglings;
+    
     // Use this for initialization
     void Start () {
         Vector3 screenSize = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, 0));
@@ -43,13 +48,15 @@ public class AStarManager : MonoBehaviour {
         cellManager = GetComponent<CellManager>();
         cellManager.Init(xCellCount, yCellCount);
 
+        Vector3 cellScale = cellPrefab.transform.localScale;
+
         for (int x = 0; x < xCellCount; x++)
         {
             for (int y = 0; y < yCellCount; y++)
             {
                 GameObject cellObject = Instantiate(cellPrefab, new Vector3(
-                    -screenSize.x + (x * cellPrefab.transform.localScale.x) + (cellPrefab.transform.localScale.x / 2), 
-                    screenSize.y - (y * cellPrefab.transform.localScale.y) - (cellPrefab.transform.localScale.y / 2), 0), 
+                    -screenSize.x + (x * cellScale.x) + (cellScale.x / 2), 
+                    screenSize.y - (y * cellScale.y) - (cellScale.y / 2), 0), 
                     Quaternion.identity);
 
                 Cell cell = cellObject.GetComponent<Cell>();
@@ -57,13 +64,11 @@ public class AStarManager : MonoBehaviour {
                 if (x == startCellXPos && y == startCellYPos)
                 {
                     cell.startCell = true;
-                    cellObject.GetComponent<SpriteRenderer>().color = Color.green;
                 }
 
                 if (x == endCellXPos && y == endCellYPos)
                 {
                     cell.endCell = true;
-                    cellObject.GetComponent<SpriteRenderer>().color = Color.red;
                 }
 
                 cell.x = x;
@@ -72,10 +77,18 @@ public class AStarManager : MonoBehaviour {
                 cellManager.cells[x, y] = cell;
             }
         }
+
+        for (int d = 0; d < 1; d++)
+        {
+            for (int y = 0; y < 1; y++)
+            {
+                zerglings.Add(Instantiate(zergling, new Vector3(6 - (0.4F * d), 4 - (0.4F * y), 0), Quaternion.identity));
+            }
+        }
     }
-	
-	// Update is called once per frame
-	void Update () {
+
+    // Update is called once per frame
+    void Update () {
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             switch (state)
@@ -98,5 +111,53 @@ public class AStarManager : MonoBehaviour {
                     break;
             }
         }
-	}
+
+        if (Input.GetKeyDown(KeyCode.Return))
+        {
+            cellManager.StartAStarPathfinding(startCellXPos, startCellYPos, endCellXPos, endCellYPos);
+
+            while (true)
+            {
+                if (cellManager.CalculateShortestDistance())
+                    break;
+            }
+
+            cellManager.ShowAStarResult();
+        }
+    }
+
+    public List<Cell> GetAStarPath(Cell currentCell, Cell parentCell)
+    {
+        return cellManager.GetAStarPath(currentCell, parentCell);
+    }
+
+    public void ZerglingMove(Cell target, Vector3 touchPos)
+    {
+        foreach (GameObject zerg in zerglings)
+        {
+            zerg.GetComponent<Zergling>().Move(target, touchPos);
+        }
+
+        target.endCell = false;
+    }
+
+    private static AStarManager _instance;
+    public static AStarManager Instance
+    {
+        get
+        {
+            if (!_instance)
+            {
+                _instance = FindObjectOfType(typeof(AStarManager)) as AStarManager;
+                if (!_instance)
+                {
+                    GameObject container = new GameObject();
+                    container.name = "AStarManager";
+                    _instance = container.AddComponent(typeof(AStarManager)) as AStarManager;
+                }
+            }
+
+            return _instance;
+        }
+    }
 }

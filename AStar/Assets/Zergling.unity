@@ -294,6 +294,8 @@ MonoBehaviour:
   endCellXPos: 0
   endCellYPos: 0
   cellPrefab: {fileID: 1388082705525676, guid: 69a43a5515cf34044871e872997994fd, type: 2}
+  zergling: {fileID: 1975311411201898, guid: 0736353fe3801874dba65e71f6810c08, type: 2}
+  zerglings: []
 --- !u!4 &1117631702
 Transform:
   m_ObjectHideFlags: 0
